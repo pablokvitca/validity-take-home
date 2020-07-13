@@ -43,7 +43,6 @@ public class DuplicateContactService {
 
         Set<Set<ContactModel>> combinations = Sets.combinations(new HashSet<>(contacts), 2);
 
-
         return combinations
             .stream()
             .parallel()
@@ -52,12 +51,20 @@ public class DuplicateContactService {
 
     }
 
+    /**
+     * Convinence helper for isDuplicate(ContactModel a, ContactModel b, double minDiff). Calls
+     * that method with the 2 values on the set. This allows to easily use the Sets.combinations
+     * method.
+     * @param set
+     * @param minDiff
+     * @return
+     */
     private boolean isDuplicate(Set<ContactModel> set, double minDiff) {
         if (set.size() == 2) {
             ContactModel[] arr = set.toArray(ContactModel[]::new);
             return isDuplicate(arr[0], arr[1], minDiff);
         }
-        throw new IllegalArgumentException("Combinations should be pairs");
+        throw new IllegalArgumentException("Combinations should be pairs.");
     }
 
     /**
@@ -102,16 +109,38 @@ public class DuplicateContactService {
 
         double val = 0;
 
-        val += WEIGHT_FIRST_NAME * levenshtein(a.getFirstName(), b.getFirstName());
-        val += WEIGHT_LAST_NAME * levenshtein(a.getLastName(), b.getLastName());
-        val += WEIGHT_COMPANY * levenshtein(a.getCompany(), b.getCompany());
-        val += WEIGHT_EMAIL * levenshtein(a.getEmail(), b.getEmail());
-        val += WEIGHT_ADDRESS_1 * levenshtein(a.getAddress1(), b.getAddress1());
-        val += WEIGHT_ADDRESS_2 * levenshtein(a.getAddress2(), b.getAddress2());
-        val += WEIGHT_ZIP * levenshtein(a.getZip(), b.getZip());
-        val += WEIGHT_STATE * levenshtein(a.getState(), b.getState());
-        val += WEIGHT_STATE_LONG * levenshtein(a.getStateLong(), b.getStateLong());
-        val += WEIGHT_PHONE * levenshtein(a.getPhone(), b.getPhone());
+        // The condition skips on counting the different if the value is missing on either side.
+
+        if (!(a.getFirstName().isEmpty() || b.getFirstName().isEmpty()))
+            val += WEIGHT_FIRST_NAME * levenshtein(a.getFirstName(), b.getFirstName());
+
+        if (!(a.getLastName().isEmpty() || b.getLastName().isEmpty()))
+            val += WEIGHT_LAST_NAME * levenshtein(a.getLastName(), b.getLastName());
+
+        if (!(a.getCompany().isEmpty() || b.getCompany().isEmpty()))
+            val += WEIGHT_COMPANY * levenshtein(a.getCompany(), b.getCompany());
+
+        if (!(a.getEmail().isEmpty() || b.getEmail().isEmpty()))
+            val += WEIGHT_EMAIL * levenshtein(a.getEmail(), b.getEmail());
+
+        if (!(a.getAddress1().isEmpty() || b.getAddress1().isEmpty()))
+            val += WEIGHT_ADDRESS_1 * levenshtein(a.getAddress1(), b.getAddress1());
+
+        if (!(a.getAddress2().isEmpty() || b.getAddress2().isEmpty()))
+            val += WEIGHT_ADDRESS_2 * levenshtein(a.getAddress2(), b.getAddress2());
+
+        if (!(a.getZip().isEmpty() || b.getZip().isEmpty()))
+            val += WEIGHT_ZIP * levenshtein(a.getZip(), b.getZip());
+
+        if (!(a.getState().isEmpty() || b.getState().isEmpty()))
+            val += WEIGHT_STATE * levenshtein(a.getState(), b.getState());
+
+        if (!(a.getStateLong().isEmpty() || b.getStateLong().isEmpty()))
+            val += WEIGHT_STATE_LONG * levenshtein(a.getStateLong(), b.getStateLong());
+
+        if (!(a.getPhone().isEmpty() || b.getPhone().isEmpty()))
+            val += WEIGHT_PHONE * levenshtein(a.getPhone(), b.getPhone());
+
 
         return val;
     }
