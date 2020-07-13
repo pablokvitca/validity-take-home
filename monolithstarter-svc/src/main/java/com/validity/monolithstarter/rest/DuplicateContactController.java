@@ -3,6 +3,10 @@ package com.validity.monolithstarter.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import com.validity.monolithstarter.MonolithStarterApp;
 import com.validity.monolithstarter.domain.ContactModel;
 import com.validity.monolithstarter.service.DuplicateContactService;
@@ -38,10 +42,18 @@ public class DuplicateContactController {
     @Autowired
     ObjectMapper mapper;
 
+    /**
+     *
+     * POST request. Will parse a CSV file for contacts (CSV should fit the ContactModel),
+     * and then find duplicates on that set of contacts.
+     *
+     * ObjectNode and ArrayNode (from fasterxml.jackson) are used to create JSON when returning.
+     *
+     * @param file The file to parse
+     * @return A JSON response with the duplicates and non-duplicated contacts.
+     */
     @PostMapping("/parse-duplicate-contact")
     public ObjectNode getDuplicateContact(@RequestParam("file") MultipartFile file) {
-
-        // ObjectNode and ArrayNode (from fasterxml.jackson) are used to create JSON when returning.
 
         // TODO: remove hardcoded keys and error messages.
 
@@ -53,7 +65,7 @@ public class DuplicateContactController {
 
             // This parses the file into a list of ContactModel
             // Note: the delimiter could be configurable, maybe part of the POST request
-            List<ContactModel> contacts = this.parseCSV(file, ",");
+            List<ContactModel> contacts = this.parseCSV(file);
 
             List<Set<ContactModel>> dup = duplicateContactService.getDuplicateContacts(contacts);
 
@@ -66,7 +78,7 @@ public class DuplicateContactController {
                     contactsNode.add(c.getNode(mapper.createObjectNode()));
                 }
 
-                //  node.put("distance-score", -1); // TODO: show tht distance score
+                //  node.put("distance-score", -1); // TODO: show tht distance score?
 
 
                 duplicatesNode.add(node);
@@ -91,21 +103,25 @@ public class DuplicateContactController {
         return result;
     }
 
-    private List<ContactModel> parseCSV(MultipartFile file, String DELIMITER) {
-        // This will parse each line into a ContactModel array.
-        // This strictly assumes the CSV file is correctly formatted and has all and exactly the
-        // right columns, in the right order. Using a library for CSV parsing, like OpenCSV would
-        // be a good future improvement.
-
-        // TODO: use OpenCSV?
-
+    /**
+     * Parses the file using OpenCSV's CSVReader.
+     *
+     * This will parse each line into a ContactModel array.
+     * This strictly assumes the CSV file is correctly formatted and has all and exactly the
+     * right columns, in the right order.
+     *
+     * Using the OpenCSV's Bean the ContactModel would be better.
+     *
+     * @param file The file to parse
+     * @return a list of ContactModel parsed from the file
+     */
+    private List<ContactModel> parseCSV(MultipartFile file) {
         List<ContactModel> contacts = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            String line = reader.readLine(); // This simply skips the first line (header)
-            while ((line = reader.readLine()) != null) {
-                // convert line into columns
-                String[] columns = line.split(DELIMITER);
 
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+            CSVReader csvReader = new CSVReaderBuilder(reader).withSkipLines(1).build();
+            for (String[] columns : csvReader.readAll()) {
+                // convert line into columns
                 if (columns.length == 12) {
                     contacts.add(new ContactModel(
                         Integer.parseInt(columns[0]), // id
@@ -121,12 +137,14 @@ public class DuplicateContactController {
                         columns[10], // state
                         columns[11] // phone
                     ));
-                } else {
-                    log.info("Huh " + line);
                 }
             }
+
+            reader.close();
+            csvReader.close();
             return contacts;
         } catch (Exception e) {
+            log.info("ERROR: " + e.getMessage());
             return contacts;
         }
     }

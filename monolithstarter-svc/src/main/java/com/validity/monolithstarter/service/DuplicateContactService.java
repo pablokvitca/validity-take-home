@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -19,12 +18,10 @@ import java.util.stream.Collectors;
 @Service
 public class DuplicateContactService {
 
-    private static final Logger log = LoggerFactory.getLogger(MonolithStarterApp.class);
-
-    // NOTE: this should be move to some configuration file.
+    // TODO: this should be moved to some config file.
     // Values should be between 0 and 1.
     // Smaller values will give less tolerance to that field to be equal.
-
+    // Values were chosen arbitrarily.
     private double WEIGHT_FIRST_NAME = 1;
     private double WEIGHT_LAST_NAME = 1;
     private double WEIGHT_COMPANY = 1;
@@ -37,8 +34,17 @@ public class DuplicateContactService {
     private double WEIGHT_PHONE = 1.0/10;
 
     private double MIN_DIFF = 15.0;
-    // Values were chosen arbitrarily.
 
+
+    /**
+     * Uses a simple heuristic (see isDuplicate) to find duplicated contacts on the given list.
+     * It finds if a combination is considered duplicated, and includes it on the returned result.
+     *
+     * TODO: Could be abstracted to work on any model and using a Strategy Pattern for rules
+     *
+     * @param contacts The list of contacts to look for duplicates in
+     * @return A list of sets of (2) duplicates.
+     */
     public List<Set<ContactModel>> getDuplicateContacts(List<ContactModel> contacts) {
 
         Set<Set<ContactModel>> combinations = Sets.combinations(new HashSet<>(contacts), 2);
@@ -145,9 +151,17 @@ public class DuplicateContactService {
         return val;
     }
 
+    /**
+     * Implementation of the Leveshtein distance algorithm for 2 strings.
+     *
+     * TODO: consider using different weights for substitution, addition, deletion?, take in as
+     * parameters
+     *
+     * @param a String to compare
+     * @param b String to compare
+     * @return the computed distance value
+     */
     private int levenshtein(String a, String b) {
-        // TODO: consider using different weights for substitution, addition, deletion?
-        // take in as parameters
         int[][] dp = new int[a.length() + 1][b.length() + 1];
 
         for (int i = 0; i <= a.length(); i++) {
@@ -169,6 +183,12 @@ public class DuplicateContactService {
         return dp[a.length()][b.length()];
     }
 
+    /**
+     * Computes the minimum of the given integers.
+     *
+     * @param numbers some intergers
+     * @return the minimum integer, if non-found gets the Integer's max value
+     */
     private static int min(int... numbers) {
         return Arrays.stream(numbers).min().orElse(Integer.MAX_VALUE);
     }
