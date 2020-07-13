@@ -2,6 +2,27 @@
 
 Take Home for Co-op
 
+## Solution:
+- Added a POST request on the server that will parse and try to find the duplicates on the
+ uploaded CSV file.
+- The CSV rows are parsed using the OpenCSV library into an array of ContactModel
+- ContactModel is a simple Java class to model a Contact's information
+- To find duplciates all 2-combinations are computed from the submitted contancs, then for each 
+pair I compute a "distance" score value using a simple heuristic. If the distance is below a 
+threshold they are marked as duplicated and added to a result set. Java Parallel Streams are 
+used here.
+- The heuristic assigns (arbitrarily) a weight to each field and then computes the Levenshtein 
+Distance between the strings of each field on the pair, then this are added to get a distance 
+score between the 2 contacts. If a field is empty ("") on either of the contacts it is ignored 
+(distance 0 for that field).
+- The frontend is a simple form to submit the CSV file (result is printed to the console), but 
+testing is easier using Postman.
+
+## NOTE:
+I thought of a better solution, but it would take longer to implement. Using strategies to encode
+ rules to better detect duplicates (and maybe why the duplicate happened), this idea is explained
+  slightly on a comment on the DuplicateContactService.java file.
+
 ## Tasks:
 1. Write an app that parses the attached normal.csv file using the starter app we have created to
  start you off.
