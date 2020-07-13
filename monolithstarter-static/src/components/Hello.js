@@ -1,32 +1,42 @@
 import React, { Component } from 'react';
-import { getHelloMessage } from "../actions/helloAction";
+import { postCSV } from "../actions/helloAction";
 
 class Hello extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      message: 'No message from server'
+      file: null
     };
+    this.onFormSubmit = this.onFormSubmit.bind(this);
+    this.onChange = this.onChange.bind(this);
+    this.fileUpload = this.fileUpload.bind(this);
   }
 
-  componentDidMount() {
-    this._isMounted = true;
-    getHelloMessage().then(message => {
-      if (this._isMounted)
-        this.setState({message});
-    }).catch(() => {
-      if (this._isMounted)
-        this.setState({message: 'The server did not respond so...hello from the client!'});
+  onFormSubmit(e){
+    e.preventDefault(); // Stop form submit
+    this.fileUpload(this.state.file).then((response) => {
+      console.log(response.data);
     });
   }
 
-  componentWillUnmount() {
-    this._isMounted = false;
+  onChange(e) {
+    this.setState({ file: e.target.files[0] });
+  }
+
+  fileUpload(file) {
+
+    const formData = new FormData();
+    formData.append('file', file);
+    return postCSV(formData);
   }
 
   render() {
     return (
-      <div>{this.state.message}</div>
+      <form onSubmit={this.onFormSubmit}>
+        <h1>CSV Upload</h1>
+        <input type="file" onChange={this.onChange} accept=".csv" />
+        <button type="submit">Upload</button>
+      </form>
     );
   }
 }
