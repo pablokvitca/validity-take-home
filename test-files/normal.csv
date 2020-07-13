@@ -1,4 +1,4 @@
-﻿id,first_name,last_name,company,email,address1,address2,zip,city,state_long,state,phone
+﻿id,firstname,lastname,company,email,address1,address2,zip,city,statelong,state,phone
 1,Donalt,Canter,Gottlieb Group,dcanter0@nydailynews.com,9 Homewood Alley,,50335,Des Moines,Iowa,IA,515-601-4495
 2,Daphene,McArthur,"West, Schimmel and Rath",dmcarthur1@twitter.com,43 Grover Parkway,,30311,Atlanta,Georgia,GA,770-271-7837
 3,Akim,McAlpine,"Quitzon, Schaefer and Gleason",amcalpine2@goo.gl,4 Kipling Drive,,93721,Fresno,California,CA,209-867-8571
