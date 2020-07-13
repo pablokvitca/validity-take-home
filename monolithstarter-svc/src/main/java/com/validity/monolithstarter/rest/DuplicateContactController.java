@@ -21,6 +21,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -54,10 +55,10 @@ public class DuplicateContactController {
             // Note: the delimiter could be configurable, maybe part of the POST request
             List<ContactModel> contacts = this.parseCSV(file, ",");
 
-            List<List<ContactModel>> dup = duplicateContactService.getDuplicateContacts(contacts);
+            List<Set<ContactModel>> dup = duplicateContactService.getDuplicateContacts(contacts);
 
             ArrayNode duplicatesNode = result.putArray("duplicates");
-            for (List<ContactModel> duplicates : dup) { // TODO: parallelize?
+            for (Set<ContactModel> duplicates : dup) { // TODO: parallelize?
                 ObjectNode node = mapper.createObjectNode();
 
                 ArrayNode contactsNode = node.putArray("contacts");
@@ -65,7 +66,7 @@ public class DuplicateContactController {
                     contactsNode.add(c.getNode(mapper.createObjectNode()));
                 }
 
-                node.put("distance-score", -1); // TODO: show tht distance score
+                //  node.put("distance-score", -1); // TODO: show tht distance score
 
 
                 duplicatesNode.add(node);
@@ -75,7 +76,7 @@ public class DuplicateContactController {
 
             ArrayNode nonDuplicates = result.putArray("deduplicated");
 
-            List<ContactModel> flatDup = dup.stream().flatMap(List::stream).collect(Collectors.toList());
+            List<ContactModel> flatDup = dup.stream().flatMap(Set::stream).collect(Collectors.toList());
 
             for (ContactModel contact : contacts) { // TODO: parallelize?
                 if (!flatDup.contains(contact)) {

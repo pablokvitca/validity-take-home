@@ -1,5 +1,7 @@
 package com.validity.monolithstarter.service;
 
+import com.google.common.collect.Sets;
+
 import com.validity.monolithstarter.MonolithStarterApp;
 import com.validity.monolithstarter.domain.ContactModel;
 
@@ -12,6 +14,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class DuplicateContactService {
@@ -36,30 +39,25 @@ public class DuplicateContactService {
     private double MIN_DIFF = 15.0;
     // Values were chosen arbitrarily.
 
-    public List<List<ContactModel>> getDuplicateContacts(List<ContactModel> contacts) {
+    public List<Set<ContactModel>> getDuplicateContacts(List<ContactModel> contacts) {
 
-        Set<ContactModel> found = new HashSet<>();
-
-        // TODO: change this for a cross-product set, so not to include the same value both ways
-
-        List<List<ContactModel>> duplicates = new ArrayList<>();
+        Set<Set<ContactModel>> combinations = Sets.combinations(new HashSet<>(contacts), 2);
 
 
+        return combinations
+            .stream()
+            .parallel()
+            .filter(combination -> isDuplicate(combination, MIN_DIFF))
+            .collect(Collectors.toList());
 
-        // We  cross-check each contact to every other. // TODO: parallelize
-        for (ContactModel a : contacts) {
-            for (ContactModel b : contacts) {
-                if (a != b // Skip if same intance
-                    && !(found.contains(a) && found.contains(b)) // Skips if we already found both
-                    && duplicate(a, b, MIN_DIFF)) {
-                    duplicates.add(Arrays.asList(a, b));
-                    found.add(a);
-                    found.add(b);
-                }
-            }
+    }
+
+    private boolean isDuplicate(Set<ContactModel> set, double minDiff) {
+        if (set.size() == 2) {
+            ContactModel[] arr = set.toArray(ContactModel[]::new);
+            return isDuplicate(arr[0], arr[1], minDiff);
         }
-
-        return duplicates;
+        throw new IllegalArgumentException("Combinations should be pairs");
     }
 
     /**
@@ -71,14 +69,33 @@ public class DuplicateContactService {
      * @param minDiff the min difference
      * @return true is the 2 contacts (a & b) are duplicate (by this heuristic)
      */
-    private boolean duplicate(ContactModel a, ContactModel b, double minDiff) {
+    private boolean isDuplicate(ContactModel a, ContactModel b, double minDiff) {
         if (a != b) { // Simple check that a and b are not the same instance
-            return this.heuristicDistance(a, b) < minDiff;
+            return this.simpleHeuristicDistance(a, b) < minDiff;
         }
         return true;
     }
 
-    private double heuristicDistance(ContactModel a, ContactModel b) {
+    /**
+     * Simple implementation that compues the Leveshtein distance for each field and gives each
+     * of those a weigth.
+     *
+     * !!! Better idea:
+     * NOTE: a much more extensible and reusable approach would be to implement some rule-based
+     * that helps encode some domain knowledge about the fields and better than the weights used
+     * here. Implementing this using something like a **Strategy Pattern** would be possible.
+     * It could encode a process where we can tell even why duplicated appeared (typo, change of
+     * address, change of company, etc).
+     * The rules could **encode** better heuristics like: "if the address information is
+     * different but all the others match exactly, the contact probably moved, so mark as
+     * duplicate", or "if the email matches exactly but any the other fields have a distance
+     * smaller than N, we can assume an data entry error, and mark as duplicate".
+     *
+     * @param a A ContactModel to compare
+     * @param b A ContactModel to compare
+     * @return the distance score for this heuristic
+     */
+    private double simpleHeuristicDistance(ContactModel a, ContactModel b) {
         // Thinking: if some values being similar might be more important for duplicates than others
         // Examples: 2 contacts with the exact same address but completely different names/emails
         // could live (or work if its work address) in the same place and not be duplicates.
@@ -100,28 +117,24 @@ public class DuplicateContactService {
     }
 
     private int levenshtein(String a, String b) {
-        // TODO: consider using differnent weights for substitution, addition, deletion,
+        // TODO: consider using different weights for substitution, addition, deletion?
         // take in as parameters
         int[][] dp = new int[a.length() + 1][b.length() + 1];
 
-        try {
-            for (int i = 0; i <= a.length(); i++) {
-                for (int j = 0; j <= b.length(); j++) {
-                    if (i == 0) {
-                        dp[i][j] = j;
-                    } else if (j == 0) {
-                        dp[i][j] = i;
+        for (int i = 0; i <= a.length(); i++) {
+            for (int j = 0; j <= b.length(); j++) {
+                if (i == 0) {
+                    dp[i][j] = j;
+                } else if (j == 0) {
+                    dp[i][j] = i;
+                } else {
+                    if (a.charAt(i - 1) == b.charAt(j - 1)) {
+                        dp[i][j] = dp[i - 1][j - 1];
                     } else {
-                        if (a.charAt(i - 1) == b.charAt(j - 1)) {
-                            dp[i][j] = dp[i - 1][j - 1];
-                        } else {
-                            dp[i][j] = min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]) + 1;
-                        }
+                        dp[i][j] = min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]) + 1;
                     }
                 }
             }
-        } catch (Exception e) {
-            log.info("EEEEH", e.getMessage());
         }
 
         return dp[a.length()][b.length()];
