@@ -105,24 +105,27 @@ public class DuplicateContactController {
                 // convert line into columns
                 String[] columns = line.split(DELIMITER);
 
-                contacts.add(new ContactModel( // TODO: move to constructor?
-                    Integer.parseInt(columns[0]), // id
-                    columns[1], // first_name
-                    columns[2], // last_name
-                    columns[3], // company
-                    columns[4], // email
-                    columns[5], // address1
-                    columns[6], // address2
-                    columns[7], // zip
-                    columns[8], // city
-                    columns[9], // state_long
-                    columns[10], // state
-                    columns[11] // phone
-                ));
+                if (columns.length == 12) {
+                    contacts.add(new ContactModel(
+                        Integer.parseInt(columns[0]), // id
+                        columns[1], // first_name
+                        columns[2], // last_name
+                        columns[3], // company
+                        columns[4], // email
+                        columns[5], // address1
+                        columns[6], // address2
+                        columns[7], // zip
+                        columns[8], // city
+                        columns[9], // state_long
+                        columns[10], // state
+                        columns[11] // phone
+                    ));
+                } else {
+                    log.info("Huh " + line);
+                }
             }
             return contacts;
-        } catch (Exception ex) {
-            log.info(ex.getMessage());
+        } catch (Exception e) {
             return contacts;
         }
     }
