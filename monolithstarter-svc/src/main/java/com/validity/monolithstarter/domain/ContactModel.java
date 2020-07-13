@@ -1,35 +1,40 @@
 package com.validity.monolithstarter.domain;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 public class ContactModel {
 
     private int id;
-    private String firstname;
-    private String lastname;
+    private String firstName;
+    private String lastName;
     private String company;
     private String email;
     private String address1;
     private String address2;
     private String zip;
     private String city;
-    private String statelong;
+    private String stateLong;
     private String state;
     private String phone;
 
-    public ContactModel(int id, String firstname, String lastname,
+    public ContactModel(int id, String firstName, String lastName,
                         String company, String email,
                         String address1, String address2, String zip,
-                        String city, String statelong, String state,
+                        String city, String stateLong, String state,
                         String phone) {
         this.id = id;
-        this.firstname = firstname;
-        this.lastname = lastname;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.company = company;
         this.email = email;
         this.address1 = address1;
         this.address2 = address2;
         this.zip = zip;
         this.city = city;
-        this.statelong = statelong;
+        this.stateLong = stateLong;
         this.state = state;
         this.phone = phone;
     }
@@ -37,18 +42,40 @@ public class ContactModel {
     @Override
     public String toString() {
         return
-                id + ',' +
-                firstname + ',' +
-                lastname + ',' +
+                firstName + ',' +
+                lastName + ',' +
                 company + ',' +
                 email + ',' +
                 address1 + ',' +
                 address2 + ',' +
                 zip + ',' +
                 city + ',' +
-                statelong + ',' +
+                stateLong + ',' +
                 state + ',' +
                 phone;
+    }
+
+    /**
+     * Adds each of the fields into a
+     * @param node
+     * @return
+     */
+    public ObjectNode getNode(ObjectNode node) {
+
+        node.put("id", this.getId());
+        node.put("first_name", this.getFirstName());
+        node.put("last_name", this.getLastName());
+        node.put("company", this.getCompany());
+        node.put("email", this.getEmail());
+        node.put("address1", this.getAddress1());
+        node.put("address2", this.getAddress2());
+        node.put("zip", this.getZip());
+        node.put("city", this.getCity());
+        node.put("state_long", this.getStateLong());
+        node.put("state", this.getState());
+        node.put("phone", this.getPhone());
+
+        return node;
     }
 
     public int getId() {
@@ -59,20 +86,20 @@ public class ContactModel {
         this.id = id;
     }
 
-    public String getFirstname() {
-        return firstname;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setFirstname(String firstname) {
-        this.firstname = firstname;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
-    public String getLastname() {
-        return lastname;
+    public String getLastName() {
+        return lastName;
     }
 
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getCompany() {
@@ -123,12 +150,12 @@ public class ContactModel {
         this.city = city;
     }
 
-    public String getStatelong() {
-        return statelong;
+    public String getStateLong() {
+        return stateLong;
     }
 
-    public void setStatelong(String statelong) {
-        this.statelong = statelong;
+    public void setStateLong(String stateLong) {
+        this.stateLong = stateLong;
     }
 
     public String getState() {
